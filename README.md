@@ -13,7 +13,7 @@ This project is a fully functional chess game built in Python, featuring a graph
 - Sound effects for moves
 - piece images rendered on a resizable board
 
-## 🧠 AI Logic
+##  AI Logic
 
 The AI is implemented in `ChessAI.py` and uses:
 - **Negamax algorithm** (a simplified Minimax)
