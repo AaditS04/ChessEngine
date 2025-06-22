@@ -97,6 +97,7 @@ def main():
                 
             
             gs.MakeMove(AIMove)
+            sound.play()
             moveMade = True
             
                     
