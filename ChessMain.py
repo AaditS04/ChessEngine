@@ -1,9 +1,11 @@
-""" This is the driver file , for handeling the user input and displaying current gaame state"""
+""" This is the driver file , for handeling the user input and displaying current game state"""
 
 import pygame as p
-
+import copy
 import ChessEngine
 import ChessAI
+import re
+
 
 
 WIDTH = HEIGHT   = 750
@@ -35,17 +37,33 @@ def main():
     moveMade = False # only generate validMoves after the game state changes and the move is made
     load_images()
     running  = True
-    sqSelected = () # to keep track of the last selected squaare by th user
+    sqSelected = () # to keep track of the last selected square by th user
     playerClicks = []
     gameOver  = False
-    playerOne = True # if human is playing white this is true 
+    playerOne = False # if human is playing white this is true 
     playerTwo = False # if a human is playing black this is true
+    currboard = copy.deepcopy(gs.board)
+    currValidMoves = []
+    for move in validMoves:
+                currValidMoves.append(move.getChessNotation())
     
     while running:
+        
+        # if currboard != gs.board :
+        #     print(gs.board)
+        #     print("\n")
+        #     for move in validMoves:
+        #         currValidMoves.append(move.getChessNotation())
+        #     print(currValidMoves)
+        #     #currValidMoves = []
+        #     print("\n")
+        #     currboard = copy.deepcopy(gs.board)
+        
         humanTurn = (gs.WhiteToMove  and playerOne) or ( not gs.WhiteToMove and playerTwo)
         if not gameOver:
+           
             for e in p.event.get() :
-                if e.type ==  p .QUIT:
+                if e.type ==  p.QUIT:
                     running  = False
                 # mouse instructions
                 elif e.type == p.MOUSEBUTTONDOWN:
@@ -67,6 +85,7 @@ def main():
                                     gs.MakeMove(validMoves[i])
                                     moveMade=True
                                     sound.play()
+                                    ChessAI.logger.log_move_attempt("Human", "Manual", validMoves[i].getChessNotation(), True)
                             
                                     sqSelected=()
                                     playerClicks=[]
@@ -91,12 +110,29 @@ def main():
         
         # AI move finder logic
         if not gameOver and not humanTurn:
-            AIMove = ChessAI.findBestMove(gs,validMoves)
-            if AIMove is None:
-                AIMove = ChessAI.findRandomMove(validMoves)
+            
+            # --- Strategic Persona Setup (Center Controller - Morphy) ---
+            custom_persona_name = "Morphy (Center)"
+            custom_persona_prompt = (
+                "You are a Classical Chess Master. You play for development and center control.\n"
+                "CRITICAL INSTRUCTIONS:\n"
+                "1. Analyze the FEN to understand the board and use the 'Legal Moves' list.\n"
+                "2. Rapid Development: Prioritize moving your E and D pawns, Knights, and Bishops.\n"
+                "3. Center Control: Aim your pieces at the center squares (d4, e4, d5, e5).\n"
+                "4. King Safety: Castle early (O-O or O-O-O).\n"
+                "5. Blunder Check: DO NOT blunder! Never move a piece to a square where it can be captured by the enemy for free.\n"
+                "Output EXACTLY ONE move from the Legal Moves list in UCI format."
+            )
+
+            # Pass the custom prompt and name to the AI function
+            AIMove = ChessAI.OpenRouterMove(gs, validMoves, persona_prompt=custom_persona_prompt, persona_name=custom_persona_name)
+            
+            # if AIMove is None:
+            #     AIMove = ChessAI.findRandomMove(validMoves)
                 
             
             gs.MakeMove(AIMove)
+            
             sound.play()
             moveMade = True
             
@@ -115,10 +151,16 @@ def main():
         elif gs.staleMate:
             gameOver = True
             drawText(screen ,'Game is draw by stalemate')
-                
+        elif gs.threefoldRepetition:
+            gameOver = True
+            drawText(screen, 'Draw by Threefold Repetition')  
         
         clock.tick(MAX_FPS)
+        
         p.display.flip()
+        
+        
+        
         
 """
 hilight square selected
