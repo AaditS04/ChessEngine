@@ -1,0 +1,4 @@
+persona,attack_delta,defense_delta,median_diff_delta
+Aggressive,0.74,0.34,0.0
+Defensive,-0.72,-1.24,0.0
+Materialist,0.42,-0.12,0.0

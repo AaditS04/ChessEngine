@@ -1,0 +1,6 @@
+comparison,better,equal,worse,p_value
+Aggressive attack vs neutral,68,70,62,0.661
+Defensive defense vs neutral,55,57,88,0.007
+Materialist accuracy vs neutral,41,86,38,0.822
+Aggressive accuracy vs neutral,38,93,53,0.142
+Defensive accuracy vs neutral,67,78,45,0.047

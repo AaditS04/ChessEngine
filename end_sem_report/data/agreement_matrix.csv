@@ -1,0 +1,5 @@
+source,Neutral,Aggressive,Defensive,Materialist
+Neutral,100.0,26.0,17.0,29.5
+Aggressive,26.0,100.0,10.0,27.0
+Defensive,17.0,10.0,100.0,11.0
+Materialist,29.5,27.0,11.0,100.0

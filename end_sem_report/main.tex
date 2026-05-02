@@ -1,0 +1,1047 @@
+\documentclass[10pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[numbers]{natbib}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{placeins}
+\pgfplotsset{compat=1.18}
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+
+\definecolor{goodblue}{HTML}{4C78A8}
+\definecolor{mistakegold}{HTML}{F2B701}
+\definecolor{blunderred}{HTML}{E45756}
+\definecolor{invalidgray}{HTML}{9A9A9A}
+\definecolor{attackorange}{HTML}{F58518}
+\definecolor{defensegreen}{HTML}{54A24B}
+\definecolor{neutralpurple}{HTML}{7B61A7}
+\definecolor{codegray}{HTML}{F6F6F6}
+
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    backgroundcolor=\color{codegray},
+    breaklines=true,
+    frame=single,
+    framerule=0.2pt,
+    columns=fullflexible,
+    keepspaces=true
+}
+
+\title{\textbf{Do Prompted Strategic Personas Influence Decision Making in Large Language Models?}\\
+\large A Chess-Based Experimental Study}
+\author{Aadit Shah\\BITS Pilani, Pilani, Rajasthan, India}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Persona prompting is widely used to steer large language models (LLMs), but it is still unclear whether a prompt changes only the model's explanation style or also its decisions in structured, long-horizon tasks. We study this question through chess. Initial complete-game simulations between LLM agents were difficult to interpret because early errors strongly changed all later positions. We therefore use a controlled position-based evaluation: two result tables contain 800 model calls over 199 unique FEN positions, with each sampled position evaluated under four personas: Neutral Baseline, Aggressive, Defensive, and Beginner Materialist. Each call supplies the board FEN and legal moves, parses a legal SAN/UCI move, compares the selected move to a depth-4 negamax alpha-beta search baseline, and computes persona-style metrics for aggression, defense, and accuracy. The analysis is paired by position: Aggressive is compared with neutral on attack score, Defensive on defensive score, and Materialist on accuracy loss because the Materialist persona is expected to preserve or improve material-winning move quality rather than optimize a separate style score. Results show that persona prompts do alter decisions: Aggressive, Defensive, and Materialist match the neutral move only 26.0\%, 17.0\%, and 29.5\% of the time, respectively. However, style adherence is uneven. Defensive achieves the strongest objective quality, with 98.5\% legal moves and 70.5\% Best/Good moves, while Aggressive obtains the highest attack metric but lower accuracy than neutral. These findings support a nuanced conclusion: persona prompts can measurably change LLM decisions, but the induced behavior is not always aligned with the named strategic style.
+\end{abstract}
+
+\section{Introduction}
+
+Large language models can be guided by prompts, few-shot examples, and persona instructions \citep{brown2020language,wei2022chain}. Persona prompting is especially common because it gives the model a compact behavioral role: an assistant can be asked to behave as a cautious analyst, an aggressive debater, or a creative planner. Prior work shows that LLMs can simulate human-like agents in interactive environments \citep{park2023generative}, and recent safety work suggests that persona conditioning can also change vulnerability or behavioral risk \citep{xu2025bullying,wang2025personality}. The open question is whether such personas shape actual decisions in a structured sequential domain, not merely the surrounding language.
+
+Chess is a useful testbed because the state is exactly representable, the action space is legal and finite, and move quality can be evaluated with a chess engine. The research question is:
+
+\begin{quote}
+Can strategic personas imposed through prompting meaningfully and consistently shape an LLM's move choices in chess-like decision making?
+\end{quote}
+
+An initial experimental design used complete games between agents. That design verified that FEN notation and explicit legal-move lists reduce illegal move generation, but complete games created a confound: one early blunder changes the future state distribution, so later moves no longer test the same decision problem across personas. The final evaluation therefore uses fixed FEN positions and queries every persona on the same board state.
+
+\subsection{Hypotheses}
+
+The final experiment is organized around three hypotheses:
+
+\begin{itemize}
+    \item \textbf{H1: Persona prompts alter move choice.} Non-neutral personas should select different moves from the neutral baseline on a substantial fraction of identical FEN positions.
+    \item \textbf{H2: Persona prompts alter the intended behavioral metric.} Aggressive should increase attack score relative to neutral; Defensive should increase defensive score relative to neutral; Materialist should preserve or improve material-based accuracy relative to neutral.
+    \item \textbf{H3: Persona alignment can trade off against move quality.} A persona may increase its intended style metric while also increasing mistakes, blunders, or invalid outputs.
+\end{itemize}
+
+\section{Related Work}
+
+Prompting and in-context learning allow LLMs to perform new tasks from natural-language instructions \citep{brown2020language}. Chain-of-thought prompting further shows that prompt structure can affect reasoning behavior \citep{wei2022chain}. Persona-conditioned agents have also been used in social simulations \citep{park2023generative}, where the goal is believable role-consistent behavior rather than strict optimality.
+
+Recent work on persona and steering suggests that prompt-level control is often partial. Role-play-at-scale studies find stable value orientations across diverse persona prompts, suggesting inertia in moral and value judgments \citep{lee2024stable}. SteerEval frames controllability as a question of behavioral granularity and reports that control degrades as specifications become more fine-grained \citep{xu2026steereval}. Other approaches attempt stronger control through activation or inference-time steering rather than prompt text alone, including COLD-Steer \citep{sharma2026coldsteer} and activation-vector personality control \citep{feng2026persona}. Training-time work such as PerMix-RLVR studies the trade-off between robustness under verifiable rewards and persona expressivity \citep{oh2026permix}. Our study is complementary: instead of proposing a new steering mechanism, it uses chess as a verifiable action-selection domain to test how far simple persona prompting can move concrete decisions.
+
+This work is closest to studies of LLMs on chess and other formal reasoning tasks. Kuo et al. \citep{kuo2023chessboard} evaluate ChatGPT's chess legality and move quality, showing that board representation and prompt design strongly affect performance. Our contribution is different: instead of asking whether an LLM can play chess well, we ask whether persona prompts systematically change the model's selected legal move when the board and action space are held fixed.
+
+\section{Experimental System}
+
+\subsection{From Complete Games to Position-Based Tests}
+
+The experimental pipeline first supported complete LLM-vs-LLM game simulations, which were useful for debugging legality, repetition, and board-state representation. The final evaluation uses a position-based pipeline that samples up to 100 rows from a FEN corpus, loads each FEN into the custom chess engine, and evaluates each position under all four persona prompts.
+
+Together, they contain 800 rows: 2 runs $\times$ 100 positions $\times$ 4 personas, with 199 unique FEN positions because one position appears in both runs.
+
+The key design choice is that every persona is tested on the same board state before the board is advanced. This converts the experiment from an uncontrolled trajectory comparison into a paired decision study. In the original full-game setting, if the Aggressive persona blundered a rook on move 12, every later move occurred in a different game than the Defensive or Neutral runs. In the position-based setting, all personas face the identical FEN and legal-move set, so differences can be attributed to the prompt condition more directly.
+
+\subsection{Experimental Procedure}
+
+The experiment consists of two independent 100-position runs. The first run used \texttt{inclusionai/ling-2.6-1t:free}, while the second run used \texttt{openai/gpt-oss-120b:free}, both through the OpenRouter API. This model change is treated as a practical replication condition rather than a controlled model-comparison study; all main conclusions are therefore reported over the combined dataset, with run-to-run stability shown separately.
+
+Decoding was run deterministically with temperature 0.0 in the OpenRouter calls. This reduces, but does not eliminate, output variability because hosted model backends and tie-breaking behavior can still change across models or deployments.
+
+For each sampled FEN, the evaluation loop performs the following operations:
+
+\begin{enumerate}
+    \item Initialize a fresh chess state and load the FEN.
+    \item Generate all legal moves using the custom chess engine.
+    \item For each persona, send the same FEN and legal-move list to the LLM, changing only the system persona prompt.
+    \item Parse the response into a candidate SAN or UCI move.
+    \item Check whether the parsed move is legal in the current position.
+    \item If legal, score the move against a depth-4 negamax alpha-beta baseline.
+    \item Compute the attack and defensive heuristic scores on the selected move.
+    \item Save the raw response, parsed move, best engine move, score difference, legality, quality label, and heuristic metrics.
+\end{enumerate}
+
+This procedure produces one row per (position, persona) pair. The analysis then groups these rows by persona for aggregate statistics and pivots them by FEN to compare each non-neutral persona against the neutral baseline on the exact same position.
+
+\subsection{Prompt and Move Extraction}
+
+The model receives the current FEN, active side, legal moves in SAN notation, and orientation hints such as which case belongs to the current player and pawn movement direction. The prompt uses a lightweight chain-of-thought style instruction: the model is asked to write one or two short strategic sentences before giving the final move. This rationale step was included to improve response quality by encouraging the model to connect its choice to the persona rather than immediately emitting a move token.
+
+The final move is required to appear inside a structured move tag. The parser first extracts the text inside that tag. If this fails, it falls back to UCI and SAN regular expressions. The parsed move is accepted only if it exactly matches a legal move object in the current position. This makes legality a measured outcome rather than an assumption.
+
+This parsing step is important because the LLM often produces explanatory text around the move. The implementation therefore distinguishes between three different outcomes: a clean legal persona move, an illegal or unparseable persona move, and a fallback engine move used only to keep the system running. In the analysis, the persona's own invalid outputs are counted as invalid rather than silently replaced with the fallback.
+
+\subsection{Personas}
+
+Four prompt conditions are used:
+
+\begin{itemize}
+    \item \textbf{Neutral Baseline:} choose the best move without a specific style.
+    \item \textbf{Aggressive:} create threats, attack the king, prefer checks, captures, and initiative.
+    \item \textbf{Defensive:} play low-risk moves, protect pieces, maintain king safety, avoid complications.
+    \item \textbf{Beginner Materialist:} prioritize capturing pieces, especially undefended material, over positional considerations.
+\end{itemize}
+
+\section{Evaluation Metrics}
+
+The evaluation uses three metric families. The first is an objective move-quality or accuracy metric based on the search baseline. The second and third are handcrafted behavioral metrics intended to detect aggressive and defensive move properties. The neutral baseline is not treated as a perfect chess oracle; instead, it is a prompt condition that gives a reference point for asking whether a persona changed behavior on the same FEN.
+
+\subsection{Accuracy Metric}
+
+For a legal candidate move $m$, the evaluator simulates the move and evaluates the resulting position with a depth-4 negamax search with alpha-beta pruning. The search alternates player perspective using the standard negamax identity:
+
+\[
+V(s, d) = \max_{a \in A(s)} -V(T(s,a), d-1),
+\]
+
+with alpha-beta pruning to avoid exploring branches that cannot affect the final maximum. At depth zero, the evaluation is material-only:
+
+\[
+S = 9(Q_w-Q_b) + 5(R_w-R_b) + 3(B_w-B_b) + 3(N_w-N_b) + 1(P_w-P_b).
+\]
+
+The king receives score zero in material evaluation because checkmate is handled separately with a large terminal value. In the code, checkmate is assigned \texttt{CHECKMATE = 10000} and stalemate is assigned zero.
+
+For each position, the engine also searches for the best legal move $m^\star$ under the same depth and evaluation function. The candidate move is compared to that best move using score difference:
+
+\[
+\Delta_{\text{score}} = S(m^\star) - S(m).
+\]
+
+Lower $\Delta_{\text{score}}$ is better. A value of 0 means the model selected a move tied with the search baseline's best move. Positive values mean the selected move is worse than the search baseline by that many material-equivalent units under the depth-4 search. Rows are then classified as Best/Good, Mistake, or Blunder. In the OpenRouter evaluation path used for the final position tests, moves with $\Delta_{\text{score}} > 8$ are Blunders and moves with $\Delta_{\text{score}} > 2$ are Mistakes. Invalid moves are logged separately.
+
+This score-difference pipeline is the main accuracy metric. It is especially important for the Materialist persona. The Materialist prompt says to capture pieces and prioritize material. Since material gain is already represented in the negamax material evaluation, the natural way to test this persona is not by inventing a separate ``materialist style'' score, but by asking whether the Materialist move preserves or improves accuracy relative to neutral:
+
+\[
+\text{Materialist improves accuracy} \iff
+\Delta_{\text{score}}^{\text{Materialist}} <
+\Delta_{\text{score}}^{\text{Neutral}}.
+\]
+
+Ties are also informative. If Materialist and Neutral have the same score difference, then the materialist instruction did not damage objective move quality on that position, even if it selected a different move.
+
+\subsection{Aggressive Metric}
+
+The attack score assigns a higher value to moves that look tactically active. The score starts at zero and adds points for concrete attacking properties:
+
+\begin{itemize}
+    \item \textbf{King proximity.} Let $d$ be the Chebyshev distance from the move's destination square to the enemy king. The score adds $\max(0, 7-d)$, so moves closer to the enemy king receive more credit.
+    \item \textbf{Enemy-territory invasion.} White receives a bonus for moving to rows 0--3, and Black receives a bonus for moving to rows 4--7. This captures whether a move crosses into the opponent's half of the board.
+    \item \textbf{Capture bonus.} Captures receive credit only if the moved piece is not simply vulnerable to recapture by a lower-value enemy piece. This prevents reckless captures from being counted as good aggression.
+    \item \textbf{Safe check bonus.} If the move gives check and the checking piece is considered safe, the score receives a larger bonus.
+    \item \textbf{Safe threat bonus.} After simulating the move, if the moved piece attacks an enemy non-king piece from a safe square, the move receives additional credit.
+\end{itemize}
+
+Safety is approximated by checking whether the moved piece is defended and whether the opponent can attack it with a lower-value piece. This means the attack metric is not simply ``move forward'' or ``make a capture.'' It attempts to capture active but non-suicidal attacking play. The paired comparison for the Aggressive persona is:
+
+Numerically, the implemented attack metric can be summarized as:
+
+\[
+\begin{aligned}
+A(m) ={}& \max(0, 7-d_K(m)) \\
+&+ 3\mathbb{I}_{\text{territory}}(m)
++ 4\mathbb{I}_{\text{capture}}(m)\mathbb{I}_{\neg \text{lower-recapture}}(m)\\
+&+ 6\mathbb{I}_{\text{check}}(m)\mathbb{I}_{\text{safe}}(m)
++ 5\mathbb{I}_{\text{threat}}(m)\mathbb{I}_{\text{safe}}(m).
+\end{aligned}
+\]
+
+Here $d_K(m)$ is the Chebyshev distance from the destination square to the opponent king. $\mathbb{I}_{\text{territory}}$ is one when the move enters the opponent half of the board. $\mathbb{I}_{\text{capture}}$ is one for captures, and $\mathbb{I}_{\neg \text{lower-recapture}}$ is one when the moved piece is not attacked by a lower-value opponent piece after the move. $\mathbb{I}_{\text{check}}$ is one when the move gives check, $\mathbb{I}_{\text{threat}}$ is one when the moved piece attacks an enemy non-king piece after moving, and $\mathbb{I}_{\text{safe}}$ is one when the moved piece is either defended without being attacked by a lower-value piece or is not attacked at all.
+
+\[
+\text{Aggressive is more attacking than neutral} \iff
+A(m_{\text{Aggressive}}) > A(m_{\text{Neutral}}),
+\]
+
+where $A(\cdot)$ is the attack-score function computed on the same original FEN.
+
+\subsection{Defensive Metric}
+
+The defensive score evaluates the position after the candidate move and rewards compact, protected play. The score contains the following components:
+
+\begin{itemize}
+    \item \textbf{King-zone defenders.} The metric scans a $5 \times 5$ region centered on the moving side's king after the move. Each friendly non-king piece near the king contributes positively.
+    \item \textbf{Pawn shield.} Pawns directly shielding the king receive an additional bonus, because they represent low-cost defensive cover.
+    \item \textbf{Hanging-piece penalty.} The metric estimates defended squares by temporarily switching perspective and generating friendly attacks. Friendly non-king pieces not on defended squares are counted as hanging and penalized.
+    \item \textbf{Compact placement.} Moves that remain closer to the player's home side receive a small bonus. This rewards cautious retreat or compact structure over overextension.
+    \item \textbf{Rescue bonus.} If the moved piece was attacked before the move and is no longer attacked after the move, the score receives a bonus for saving material.
+\end{itemize}
+
+Higher values are intended to represent stronger defensive behavior. In practice, the hanging-piece penalty dominates many positions, so the mean values are negative. The paired comparison for the Defensive persona is:
+
+Numerically, the defensive metric can be summarized as:
+
+\[
+D(m) = 2N_K(m) + 3P_K(m) - 4H(m) + 2\mathbb{I}_{\text{compact}}(m) + 5\mathbb{I}_{\text{rescue}}(m).
+\]
+
+Here $N_K(m)$ is the number of friendly non-king defenders in the $5 \times 5$ king zone after the move, $P_K(m)$ is the number of shielding pawns in that region, and $H(m)$ is the number of friendly non-king pieces that are not defended after the move. $\mathbb{I}_{\text{compact}}$ is one when the moved piece remains on the more compact/home-side half of the board, and $\mathbb{I}_{\text{rescue}}$ is one when the moved piece was attacked before the move but is no longer attacked afterward.
+
+\[
+\text{Defensive is more defensive than neutral} \iff
+D(m_{\text{Defensive}}) > D(m_{\text{Neutral}}),
+\]
+
+where $D(\cdot)$ is the defensive-score function. This is a stricter test than asking whether the Defensive persona has high move quality: it asks whether the selected move improves the particular defensive heuristic relative to the neutral move on the same FEN.
+
+\subsection{Persona-Specific Baseline Comparisons}
+
+The main analysis compares every persona to the Neutral Baseline on the metric most aligned with that persona's instruction:
+
+\begin{itemize}
+    \item Aggressive is compared to Neutral using attack score.
+    \item Defensive is compared to Neutral using defensive score.
+    \item Beginner Materialist is compared to Neutral using score difference, where lower is better.
+\end{itemize}
+
+This paired setup is central to the evaluation. Aggregate means can show that one persona tends to be more active or more accurate, but paired comparisons answer a sharper question: given the same board state and same legal actions, did the persona prompt push the model toward the intended behavioral direction relative to a neutral instruction?
+
+\section{Results}
+
+\subsection{Overall Persona Outcomes}
+
+We first summarize legality, move quality, exact best-move agreement, and style scores across all 800 model calls. This aggregate view establishes whether any persona changes the overall quality distribution before examining paired position-level comparisons.
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Persona & Legal & Best/Good & Mistake & Blunder & Invalid & Median $\Delta$ & Best Move & Attack\\
+\midrule
+Neutral & 96.0 & 57.0 & 32.0 & 7.0 & 4.0 & 2.0 & 12.0 & 6.95\\
+Aggressive & 95.5 & 54.0 & 33.0 & 8.5 & 4.5 & 2.0 & 10.5 & 7.70\\
+Defensive & 98.5 & 70.5 & 21.5 & 6.5 & 1.5 & 1.0 & 11.0 & 6.22\\
+Materialist & 86.0 & 55.0 & 24.5 & 6.5 & 14.0 & 2.0 & 15.5 & 7.37\\
+\bottomrule
+\end{tabular}
+\caption{Aggregate results over 800 model calls. All rates are percentages except median score difference and attack score.}
+\label{tab:aggregate}
+\end{table}
+
+Table~\ref{tab:aggregate} shows the main aggregate result. The Defensive persona performs best objectively: it has the highest legality rate, highest Best/Good rate, lowest invalid rate, and lowest median score difference. The Aggressive persona has the highest attack score, but its move quality is slightly worse than neutral. The Beginner Materialist prompt has the highest exact best-move match rate, but also the largest invalid rate, suggesting that capture-focused language often pushes the model into brittle move outputs.
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Persona & Legal Rate & 95\% CI & Best/Good Rate & 95\% CI\\
+\midrule
+Neutral & 96.0 & [92.3, 98.0] & 57.0 & [50.1, 63.7]\\
+Aggressive & 95.5 & [91.7, 97.6] & 54.0 & [47.1, 60.8]\\
+Defensive & 98.5 & [95.7, 99.5] & 70.5 & [63.8, 76.4]\\
+Materialist & 86.0 & [80.5, 90.1] & 55.0 & [48.1, 61.7]\\
+\bottomrule
+\end{tabular}
+\caption{Wilson 95\% confidence intervals for aggregate legality and Best/Good rates. These intervals are descriptive because rows are not fully independent repeated samples from a fixed benchmark.}
+\label{tab:ci}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar stacked,
+    width=0.96\linewidth,
+    height=6cm,
+    ymin=0,ymax=100,
+    ylabel={Rows (\%)},
+    symbolic x coords={Neutral,Aggressive,Defensive,Materialist},
+    xtick=data,
+    x tick label style={rotate=20,anchor=east},
+    legend style={at={(0.5,1.08)},anchor=south,legend columns=4},
+    bar width=18pt,
+    grid=major,
+    grid style={draw=gray!15}
+]
+\addplot+[fill=goodblue,draw=none] table[x=persona,y=good,col sep=comma]{data/quality_stack.csv};
+\addplot+[fill=mistakegold,draw=none] table[x=persona,y=mistake,col sep=comma]{data/quality_stack.csv};
+\addplot+[fill=blunderred,draw=none] table[x=persona,y=blunder,col sep=comma]{data/quality_stack.csv};
+\addplot+[fill=invalidgray,draw=none] table[x=persona,y=invalid,col sep=comma]{data/quality_stack.csv};
+\legend{Best/Good,Mistake,Blunder,Invalid}
+\end{axis}
+\end{tikzpicture}
+\caption{Move-quality distribution by persona. Defensive has the highest Best/Good share in the current dataset.}
+\label{fig:quality}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{Style Metrics}
+
+We next inspect the two handcrafted behavioral scores. These metrics are not intended to replace engine evaluation; instead, they test whether the persona prompt changes interpretable move properties such as attacking activity or defensive compactness.
+
+\begin{figure}[!htbp]
+\centering
+\begin{subfigure}{0.48\linewidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    width=\linewidth,
+    height=5.5cm,
+    ylabel={Attack score},
+    symbolic x coords={Neutral,Aggressive,Defensive,Materialist},
+    xtick=data,
+    x tick label style={rotate=35,anchor=east},
+    bar width=14pt,
+    ymin=0,
+    grid=major,
+    grid style={draw=gray!15}
+]
+\addplot+[fill=attackorange,draw=none] table[x=persona,y=attack,col sep=comma]{data/metric_summary.csv};
+\end{axis}
+\end{tikzpicture}
+\caption{Aggression heuristic}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.48\linewidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    width=\linewidth,
+    height=5.5cm,
+    ylabel={Defensive score},
+    symbolic x coords={Neutral,Aggressive,Defensive,Materialist},
+    xtick=data,
+    x tick label style={rotate=35,anchor=east},
+    bar width=14pt,
+    ymax=0,
+    grid=major,
+    grid style={draw=gray!15}
+]
+\addplot+[fill=defensegreen,draw=none] table[x=persona,y=defense,col sep=comma]{data/metric_summary.csv};
+\end{axis}
+\end{tikzpicture}
+\caption{Defense heuristic}
+\end{subfigure}
+\caption{Handcrafted persona-style metrics. Aggressive has the strongest attack score. The defensive heuristic does not cleanly validate the Defensive prompt, even though Defensive is objectively most accurate.}
+\label{fig:style-metrics}
+\end{figure}
+
+The style metrics show only partial persona alignment. Aggressive increases the attack metric from 6.95 to 7.70. Materialist also increases the attack score, probably because captures are counted as attacking events. Defensive does not improve the defensive score; its mean is lower than neutral. This is an important result rather than a failure to hide: the defensive prompt improves accuracy and legality, but the handcrafted defensive metric may not capture the model's actual notion of safe play.
+
+\FloatBarrier
+
+\subsection{Move Agreement with the Neutral Baseline}
+
+We then compare whether each persona selects the same move as the neutral baseline on the same FEN. Low agreement indicates that persona prompts affect the final decision, not only the explanation preceding the move.
+
+\begin{figure}[!htbp]
+\centering
+\begin{subfigure}{0.48\linewidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar stacked,
+    width=\linewidth,
+    height=5.3cm,
+    ymin=0,ymax=100,
+    ylabel={Positions (\%)},
+    symbolic x coords={Aggressive,Defensive,Materialist},
+    xtick=data,
+    x tick label style={rotate=25,anchor=east},
+    legend style={at={(0.5,1.10)},anchor=south,legend columns=1,font=\scriptsize},
+    bar width=16pt,
+    grid=major,
+    grid style={draw=gray!15}
+]
+\addplot+[fill=neutralpurple,draw=none] table[x=persona,y=same,col sep=comma]{data/agreement.csv};
+\addplot+[fill=invalidgray,draw=none] table[x=persona,y=different,col sep=comma]{data/agreement.csv};
+\legend{Same as neutral,Different from neutral}
+\end{axis}
+\end{tikzpicture}
+\caption{Move agreement}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.48\linewidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    width=\linewidth,
+    height=5.3cm,
+    ylabel={Mean delta vs. neutral},
+    symbolic x coords={Aggressive,Defensive,Materialist},
+    xtick=data,
+    x tick label style={rotate=25,anchor=east},
+    legend style={at={(0.5,1.10)},anchor=south,legend columns=1,font=\scriptsize},
+    bar width=9pt,
+    grid=major,
+    grid style={draw=gray!15}
+]
+\addplot+[fill=attackorange,draw=none] table[x=persona,y=attack_delta,col sep=comma]{data/deltas.csv};
+\addplot+[fill=defensegreen,draw=none] table[x=persona,y=defense_delta,col sep=comma]{data/deltas.csv};
+\legend{Attack score delta,Defense score delta}
+\end{axis}
+\end{tikzpicture}
+\caption{Style-score deltas}
+\end{subfigure}
+\caption{Paired comparison with the neutral baseline. Left: persona prompts usually change the selected move. Right: average style-score changes relative to neutral on the same FEN positions.}
+\label{fig:agreement-deltas}
+\end{figure}
+
+The strongest evidence that personas affect decision making is move disagreement. If personas were only changing the explanation style, their selected moves would often match the neutral baseline. Instead, all three non-neutral personas diverge from neutral on most positions. This also explains why full-game experiments were hard to interpret: persona differences appear immediately at the move-choice level, and those differences compound over a game.
+
+\FloatBarrier
+
+\subsection{Persona-Specific Comparison Against Neutral}
+
+The most direct persona-adherence test is paired: each non-neutral persona is compared to neutral using the metric aligned with that persona. This avoids overinterpreting aggregate means and asks whether the prompt changed behavior in the intended direction on the same board state.
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabular}{llrrrrr}
+\toprule
+Persona & Metric & Better & Equal & Worse & Better on Different Moves & Persona Good When Better\\
+\midrule
+Aggressive & Attack $\uparrow$ & 34.0 & 35.0 & 31.0 & 45.9 & 52.9\\
+Defensive & Defense $\uparrow$ & 27.5 & 28.5 & 44.0 & 33.1 & 63.6\\
+Materialist & $\Delta_{\text{score}} \downarrow$ & 24.8 & 52.1 & 23.0 & 38.7 & 92.7\\
+\bottomrule
+\end{tabular}
+\caption{Paired persona-vs-neutral comparisons. ``Better'', ``Equal'', and ``Worse'' compare each persona to neutral on the same FEN using the metric aligned with that persona. For Materialist, lower score difference is better.}
+\label{tab:paired}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar stacked,
+    width=0.82\linewidth,
+    height=5.8cm,
+    ymin=0,ymax=100,
+    ylabel={Comparable positions (\%)},
+    symbolic x coords={Aggressive,Defensive,Materialist},
+    xtick=data,
+    legend style={at={(0.5,1.08)},anchor=south,legend columns=3},
+    bar width=20pt,
+    grid=major,
+    grid style={draw=gray!15}
+]
+\addplot+[fill=goodblue,draw=none] table[x=persona,y=better,col sep=comma]{data/persona_baseline_comparison.csv};
+\addplot+[fill=invalidgray,draw=none] table[x=persona,y=equal,col sep=comma]{data/persona_baseline_comparison.csv};
+\addplot+[fill=blunderred,draw=none] table[x=persona,y=worse,col sep=comma]{data/persona_baseline_comparison.csv};
+\legend{Better than neutral,Equal to neutral,Worse than neutral}
+\end{axis}
+\end{tikzpicture}
+\caption{Persona-specific metric comparisons against neutral. Aggressive is tested on attack score, Defensive on defensive score, and Materialist on accuracy loss.}
+\label{fig:paired}
+\end{figure}
+
+Table~\ref{tab:paired} gives a more precise view of persona adherence than aggregate means. Aggressive improves on neutral in attack score for 34.0\% of positions and ties in another 35.0\%. Among positions where Aggressive chooses a different move from neutral, 45.9\% of those different moves improve attack score. This suggests that the aggressive prompt often changes the move in the intended direction, but not consistently enough to dominate neutral.
+
+Defensive is more complicated. It beats neutral on the defensive heuristic in only 27.5\% of positions and is worse in 44.0\%. However, when Defensive does beat neutral on the defensive score, its selected move is Best/Good 63.6\% of the time, compared with neutral being Best/Good 52.7\% on those same positions. This means that the defensive heuristic can identify some useful defensive deviations, but the aggregate defensive score is not fully aligned with the prompt's overall quality improvement.
+
+Materialist shows the strongest accuracy-preservation pattern. In comparable legal positions, it has lower score difference than neutral in 24.8\%, equal score difference in 52.1\%, and worse score difference in 23.0\%. When Materialist improves over neutral, the Materialist move is Best/Good 92.7\% of the time, while neutral is Best/Good only 24.4\% on those same positions. This indicates that the materialist instruction sometimes helps the model find materially strong moves that the neutral prompt misses. The weakness is legality: Materialist has a 14.0\% invalid rate, much higher than the other personas.
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Paired Comparison & Better & Equal & Worse & Sign-test $p$\\
+\midrule
+Aggressive attack vs. neutral & 68 & 70 & 62 & 0.661\\
+Defensive defense vs. neutral & 55 & 57 & 88 & 0.007\\
+Materialist accuracy vs. neutral & 41 & 86 & 38 & 0.822\\
+Aggressive accuracy vs. neutral & 38 & 93 & 53 & 0.142\\
+Defensive accuracy vs. neutral & 67 & 78 & 45 & 0.047\\
+\bottomrule
+\end{tabular}
+\caption{Paired sign-test summaries. Ties are excluded from the two-sided sign test. These checks support cautious interpretation: Aggressive does not significantly dominate neutral on attack score, Defensive significantly underperforms neutral on the current defensive heuristic, and Defensive shows a modest paired accuracy advantage.}
+\label{tab:sign-tests}
+\end{table}
+
+\FloatBarrier
+
+\subsection{Run-to-Run Stability}
+
+Finally, we check whether the main quality pattern is stable across the two 100-position runs. Because the runs use different sampled positions and different OpenRouter models, this figure should be interpreted as a robustness check rather than a controlled model comparison.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    width=0.86\linewidth,
+    height=5.8cm,
+    ymin=0,ymax=80,
+    ylabel={Best/Good moves (\%)},
+    symbolic x coords={Run 1,Run 2},
+    xtick=data,
+    legend style={at={(0.5,1.08)},anchor=south,legend columns=4},
+    bar width=9pt,
+    grid=major,
+    grid style={draw=gray!15}
+]
+\addplot+[fill=goodblue,draw=none] table[x=run,y=neutral,col sep=comma]{data/run_good_rates.csv};
+\addplot+[fill=attackorange,draw=none] table[x=run,y=aggressive,col sep=comma]{data/run_good_rates.csv};
+\addplot+[fill=defensegreen,draw=none] table[x=run,y=defensive,col sep=comma]{data/run_good_rates.csv};
+\addplot+[fill=neutralpurple,draw=none] table[x=run,y=materialist,col sep=comma]{data/run_good_rates.csv};
+\legend{Neutral,Aggressive,Defensive,Materialist}
+\end{axis}
+\end{tikzpicture}
+\caption{Best/Good rate across the two 100-position runs. Defensive is consistently strongest, while Aggressive varies substantially between runs.}
+\label{fig:run-stability}
+\end{figure}
+
+\FloatBarrier
+
+\section{Discussion and Insights}
+
+The results support several insights about persona prompting as a decision-control mechanism.
+
+\subsection{Personas Change Decisions, Not Only Explanations}
+
+The clearest result is the low agreement with the neutral baseline. Aggressive matches neutral in only 26.0\% of position instances, Defensive in 17.0\%, and Materialist in 29.5\%. Since the FEN and legal moves are identical across personas within each paired comparison, these differences cannot be explained by different board states. They indicate that persona prompts affect the actual selected move, though the current design does not yet quantify repeated-sample variance for each prompt.
+
+This finding justifies the move from full-game evaluation to position-based evaluation. In complete games, persona-induced deviations happen early and then alter the entire future state distribution. The position-based setup isolates those deviations directly.
+
+\subsection{Persona Steering Has Two Separate Questions}
+
+The experiment separates two questions that are often mixed together:
+
+\begin{itemize}
+    \item \textbf{Does the prompt change the move?}
+    \item \textbf{Does the changed move align with the intended persona?}
+\end{itemize}
+
+The first answer is yes in this dataset. The second answer is mixed. Aggressive has the highest mean attack score and improves over neutral on the attack metric in 34.0\% of positions. This is evidence of partial style alignment, but the paired sign test does not show a reliable advantage over neutral. Aggressive is also worse than neutral on the attack metric in 31.0\% of positions, so the prompt is not a reliable controller.
+
+Defensive is the opposite kind of result. It is the strongest persona by accuracy and legality, but it does not beat neutral on the handcrafted defensive score overall. This suggests that the prompt may produce safer chess decisions without matching the specific implementation of the defensive metric. A human would often call a forcing simplification or material-winning move ``safe,'' but the current defensive score mostly measures king-zone compactness, defended pieces, and retreat-like behavior.
+
+\subsection{Materialist Reveals an Accuracy-Legality Tradeoff}
+
+The Beginner Materialist persona is included in the accuracy comparison because material gain is directly represented in the search evaluation. Unlike Aggressive and Defensive, Materialist is not primarily evaluated through a separate style metric. Instead, it is compared to neutral using $\Delta_{\text{score}}$, where lower is better.
+
+This comparison reveals a useful tradeoff. Among comparable legal positions, Materialist is better than neutral in 24.8\%, equal in 52.1\%, and worse in 23.0\%. This means that when Materialist returns a legal move, it often preserves neutral-level accuracy and sometimes improves it. The improvement cases are strong descriptively: when Materialist beats neutral, its move is Best/Good 92.7\% of the time.
+
+However, Materialist also has the highest invalid rate at 14.0\%. This suggests that a capture-focused instruction can make the model more brittle: it sometimes tries to express a capture that is not legal or not formatted correctly, even though the same persona can be accurate when parsing succeeds.
+
+\subsection{Defensive Prompting Improves Robustness}
+
+Defensive has the best aggregate performance in the current data: 98.5\% legal moves, 70.5\% Best/Good moves, only 1.5\% invalid moves, and median score difference 1.0. This is a large descriptive improvement over neutral's 57.0\% Best/Good rate and median score difference 2.0.
+
+One possible explanation is that defensive prompting acts like a regularizer. The prompt repeatedly emphasizes avoiding blunders, protecting pieces, king safety, and low-risk play. Even when the model does not maximize the handcrafted defensive score, these instructions may reduce the probability of speculative or illegal outputs. In a chess setting, conservative constraints can improve objective quality because many bad moves are bad precisely because they hang material or ignore threats.
+
+\subsection{Aggression Increases Activity but Not Accuracy}
+
+Aggressive has the highest mean attack score, rising from neutral's 6.95 to 7.70. It also improves attack score over neutral in 34.0\% of positions. This is consistent with a behavioral effect, although the paired sign test indicates that the effect is not robust under the current sample.
+
+However, Aggressive has only 54.0\% Best/Good moves, below neutral's 57.0\%, and a slightly higher blunder rate. This suggests that prompting for initiative can increase active-looking decisions without reliably improving chess quality. The model may learn to select checks, threats, or forward moves because they match the persona language, but not always because they are objectively sound.
+
+\subsection{Same-Move Cases Show Accuracy Preservation}
+
+Same-move cases are useful because they show where persona prompting did not perturb the final decision. Aggressive, Defensive, and Materialist match neutral on 52, 34, and 59 out of 200 position instances, respectively. In those cases, accuracy is preserved by construction because the selected move is identical.
+
+The more scientifically interesting cases are different-move cases. Among different moves, Aggressive improves the attack metric in 45.9\% of cases; Defensive improves the defensive metric in 33.1\%; Materialist improves accuracy in 38.7\%. These numbers show that personas frequently change the move, but only a subset of those changes are beneficial under the intended metric.
+
+\subsection{Metric Validity Is Itself a Research Finding}
+
+The attack metric behaves plausibly: the Aggressive persona has the highest attack score. The defensive metric is less aligned with the observed quality results. Rather than treating this as a failure, it is an important methodological lesson. Measuring chess style is harder than measuring move legality or material loss. A defensive chess move may involve simplifying into an endgame, winning material safely, forcing queen trades, or neutralizing threats far away from the king. The current defensive heuristic captures only some of these ideas.
+
+Future versions should refine the defensive metric using additional features: reduction in opponent legal checking moves, reduction in attacked high-value pieces, king safety before and after the move, queen-trade incentives, and engine-evaluated risk variance across opponent replies.
+
+\section{Limitations}
+
+The current search engine is intentionally lightweight. It uses depth-4 negamax with material-only leaf evaluation, so it can miss strategic ideas that stronger chess engines would evaluate differently. The FEN sample is random rather than curated by tactical theme, which makes the experiment broad but not diagnostic for specific chess motifs. Finally, the attack and defense metrics are handcrafted. They are useful for first-pass quantification, but the defensive score in particular should be refined because its behavior does not match the strong objective performance of the Defensive persona.
+
+The two 100-position runs also use different base models and different sampled FEN sets. The pooled results should therefore be interpreted as descriptive evidence across the available artifacts, not as a controlled estimate for a single fixed model. The per-run figure is included to expose this variability rather than hide it.
+
+The experiment uses deterministic decoding with temperature 0.0, but it still uses only one sample per (position, persona) condition. This means the current study cannot estimate within-persona response variance or fully separate persona effects from residual backend and tie-breaking variability. Future experiments should fix a benchmark set of FEN positions, use one base model at a time, collect multiple samples per persona and position, and report confidence intervals and paired tests as primary analysis rather than supplementary checks.
+
+Move quality should also be re-evaluated with a stronger chess engine, such as Stockfish with NNUE and fixed time or depth controls. The current material-only search is useful for a transparent prototype, but it is not strong enough to support definitive chess-quality claims. A future version should report centipawn loss, engine top-move agreement, and phase-stratified results for openings, middlegames, endgames, tactical positions, and quiet positions.
+
+\section{Reproducibility}
+
+The manuscript is built from experimental artifacts rather than manually entered observations. The raw results are stored as structured logs, the analysis script regenerates all figure data tables from those logs, and the LaTeX source reads those tables through PGFPlots. Thus, all reported figures are tied directly to the logged experiment outputs. A glossary and implementation reference is included in Appendix~\ref{app:glossary}.
+
+\section{Conclusion}
+
+This study asks whether strategic persona prompts can influence LLM decision making in chess. The full-game setup showed that legal-move lists and FEN representation are essential, but also revealed that complete games confound analysis because early errors change later positions. The position-based experiment fixes this issue by testing four personas on identical FEN states.
+
+The results show measurable prompt-associated differences in this dataset. Personas choose different moves from neutral in most positions, and the Defensive prompt has the highest legality and Best/Good move rate. At the same time, persona labels are not perfect behavioral controls: Aggressive only modestly increases attacking behavior, and Defensive improves accuracy more than the defensive heuristic. The final answer is therefore nuanced: prompted personas can influence LLM decisions, but reliable strategic control requires stronger evaluation, repeated sampling, and validated behavioral metrics.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+
+\section{Glossary and Implementation Reference}
+\label{app:glossary}
+
+\subsection{Glossary}
+
+\begin{description}
+    \item[FEN.] Forsyth-Edwards Notation, a compact string representation of a chess position. It records piece placement, side to move, castling rights, en-passant availability, and move counters.
+    \item[SAN.] Standard Algebraic Notation, the human-readable notation used for moves such as \texttt{Nxd5}, \texttt{O-O}, or \texttt{Qe2+}.
+    \item[UCI.] Universal Chess Interface move notation, a coordinate-based notation such as \texttt{e2e4} or \texttt{g7g8q}.
+    \item[Legal move list.] The explicit list of moves available in the current position. It constrains the LLM output space and lets the evaluator reject illegal or unparseable moves.
+    \item[Move tag.] The final answer format required from the LLM: \texttt{<MOVE>...</MOVE>}. The parser extracts the move inside this tag before checking legality.
+    \item[Lightweight chain-of-thought.] The prompt asks the model to give one or two short strategic sentences before the tagged move. This was used to improve response quality and make the persona instruction active without allowing long, uncontrolled reasoning traces.
+    \item[Score difference.] The difference between the depth-4 search score of the engine's best move and the score of the LLM's selected move. Lower is better.
+    \item[Best/Good.] A legal move whose score difference is at most 2 under the final evaluation threshold.
+    \item[Mistake.] A legal move with score difference greater than 2 and at most 8.
+    \item[Blunder.] A legal move with score difference greater than 8.
+    \item[Invalid.] A model response that cannot be parsed into a legal move for the current board state.
+\end{description}
+
+\subsection{Persona Prompts}
+
+\paragraph{Neutral Baseline.}
+\begin{lstlisting}
+You are a neutral chess playing assistant.
+CRITICAL INSTRUCTIONS:
+1. Analyze the given board position and Legal Moves.
+2. Select the absolute best, most optimal move from the Legal Moves list.
+3. Do not adopt any specific playstyle (e.g., neither overly aggressive nor overly defensive).
+\end{lstlisting}
+
+\paragraph{Defensive.}
+\begin{lstlisting}
+You are an ultra-solid, defensive chess player known as the Defensive Turtle.
+CRITICAL INSTRUCTIONS:
+1. Play extremely solid, low-risk moves.
+2. Prioritize defending your pieces over attacking.
+3. Keep a solid pawn structure and overprotect your King.
+4. Avoid risky sacrifices and complex tactical complications.
+5. Blunder Check: DO NOT blunder! Never leave a piece hanging or unprotected.
+\end{lstlisting}
+
+\paragraph{Aggressive.}
+\begin{lstlisting}
+You are an aggressive, attacking chess player.
+CRITICAL INSTRUCTIONS:
+1. Play aggressively to proactively create threats and seize the initiative.
+2. Prioritize attacking your opponent's King and active piece placement.
+3. Look for tactical combinations, checks, and captures.
+4. You are aggressive, but still value your pieces. Don't sacrifice material recklessly without a clear continuation.
+\end{lstlisting}
+
+\paragraph{Beginner Materialist.}
+\begin{lstlisting}
+You are a beginner chess player known as the Beginner Materialist.
+CRITICAL INSTRUCTIONS:
+1. Your only goal is to capture your opponent's pieces.
+2. If a piece is undefended, you must take it immediately, regardless of long-term strategy.
+3. You do not understand positional chess, development, or king safety.
+\end{lstlisting}
+
+\subsection{LLM User Prompt Template}
+
+The user prompt below is combined with one of the persona system prompts above for each model call.
+
+\begin{lstlisting}
+Board State: {FEN}
+Active Player: {turn}
+Valid Moves: {legal_moves}
+
+You are playing as {turn}.
+- Your pieces are {piece_case} letters. The enemy's are {enemy_case}.
+- Your pawns move {direction}.
+
+INSTRUCTIONS:
+1. DO NOT explain how to parse the FEN. DO NOT list out pieces or their coordinates and the board state.
+2. Write exactly ONE OR TWO SHORT sentences explaining your strategic thought process based on your persona.
+3. Then, output your chosen move wrapped in <MOVE> tags in Standard Algebraic Notation (SAN).
+
+Example output format:
+I must capture the enemy piece because it is hanging. <MOVE>Nxd5</MOVE>
+\end{lstlisting}
+
+\subsection{Move Extraction Reference}
+
+The parser first attempts to extract the tagged move, then falls back to UCI/SAN-style matching before checking the candidate against the legal move list.
+
+\begin{lstlisting}[language=Python]
+cot_match = re.search(r"<MOVE>\s*(.+?)\s*</MOVE>", raw_output, re.IGNORECASE)
+if cot_match:
+    best_move = cot_match.group(1).strip().replace("+", "").replace("#", "")
+else:
+    uci_match = re.search(r"\b[a-h][1-8][a-h][1-8][qrbn]?\b", raw_output)
+    best_move = uci_match.group(0) if uci_match else raw_output
+
+is_legal = False
+valid_move_obj = None
+for move in validMoves:
+    if best_move.lower() == move.getSAN(validMoves).lower():
+        is_legal = True
+        valid_move_obj = move
+        best_move = move.getChessNotation()
+        break
+
+if not is_legal:
+    for move in validMoves:
+        if best_move.lower() == move.getChessNotation().lower():
+            is_legal = True
+            valid_move_obj = move
+            break
+\end{lstlisting}
+
+\subsection{Accuracy Evaluation Reference}
+
+The reference implementation below contains the full accuracy-evaluation logic used for move scoring, best-move search, score-difference computation, and quality labeling.
+
+\begin{lstlisting}[language=Python]
+import copy
+import random
+
+pieceScore = {"K": 0, "Q": 9, "R": 5, "N": 3, "B": 3, "p": 1}
+CHECKMATE = 10000
+STALEMATE = 0
+DEPTH = 4
+
+def scoreMove(gs, move):
+    """Return the depth-limited search score of a candidate move."""
+    gs_copy = copy.deepcopy(gs)
+    gs_copy.MakeMove(move)
+    turnMultiplier = 1 if gs_copy.WhiteToMove else -1
+    score = -negamaxAlphaBeta(
+        gs_copy,
+        DEPTH - 1,
+        -CHECKMATE,
+        CHECKMATE,
+        turnMultiplier,
+    )
+    return score
+
+def findBestMove(gs, validMoves, returnScore=False, verbose=False):
+    """Search all legal moves and return the best move under negamax."""
+    turnMultiplier = 1 if gs.WhiteToMove else -1
+    bestMove = None
+    bestScore = -CHECKMATE
+    alpha = -CHECKMATE
+    beta = CHECKMATE
+
+    # Randomization only affects tie-breaking among equal-score moves.
+    random.shuffle(validMoves)
+
+    for move in validMoves:
+        gs.MakeMove(move)
+        score = -negamaxAlphaBeta(gs, DEPTH - 1, -beta, -alpha, -turnMultiplier)
+        gs.undoMove()
+
+        if score > bestScore:
+            bestScore = score
+            bestMove = move
+            alpha = max(alpha, bestScore)
+
+    if bestMove and verbose:
+        print(bestMove.getChessNotation())
+
+    if returnScore:
+        return bestMove, bestScore
+
+    return bestMove
+
+def negamaxAlphaBeta(gs, depth, alpha, beta, turnMultiplier):
+    """Depth-limited negamax search with alpha-beta pruning."""
+    if depth == 0:
+        return turnMultiplier * scoreMaterial(gs.board)
+
+    validMoves = gs.getValidMoves()
+
+    if gs.checkMate:
+        return -CHECKMATE + (DEPTH - depth)
+    elif gs.staleMate:
+        return STALEMATE
+
+    maxScore = -CHECKMATE
+    for move in validMoves:
+        gs.MakeMove(move)
+        score = -negamaxAlphaBeta(gs, depth - 1, -beta, -alpha, -turnMultiplier)
+        gs.undoMove()
+
+        if score > maxScore:
+            maxScore = score
+        alpha = max(alpha, score)
+        if alpha >= beta:
+            break
+
+    return maxScore
+
+def scoreMaterial(board):
+    """Material-only board evaluation from White's perspective."""
+    score = 0
+    for row in board:
+        for square in row:
+            if square != "--":
+                pieceType = square[1]
+                if square[0] == "w":
+                    score += pieceScore[pieceType]
+                elif square[0] == "b":
+                    score -= pieceScore[pieceType]
+    return score
+
+def evaluate_move_accuracy(gs, validMoves, candidate_move):
+    """Compute best move, score difference, and quality label."""
+    ai_score = scoreMove(gs, candidate_move)
+    best_move_obj, best_score = findBestMove(
+        copy.deepcopy(gs),
+        validMoves,
+        returnScore=True,
+        verbose=False,
+    )
+    best_move_uci = best_move_obj.getChessNotation() if best_move_obj else None
+    score_diff = best_score - ai_score
+
+    quality = "Best/Good"
+    if score_diff > 8:
+        quality = "BLUNDER"
+    elif score_diff > 2:
+        quality = "Mistake"
+
+    return {
+        "ai_score": ai_score,
+        "best_score": best_score,
+        "best_move": best_move_uci,
+        "score_diff": score_diff,
+        "quality": quality,
+    }
+\end{lstlisting}
+
+\subsection{Attack Metric Reference}
+
+The reference implementation below gives the complete attack-score calculation.
+
+\begin{lstlisting}[language=Python]
+import copy
+
+def calculate_attack_score(gs_original, move):
+    if not move:
+        return 0
+
+    score = 0
+    piece_values = {"p": 1, "N": 3, "B": 3, "R": 5, "Q": 9, "K": 100}
+    our_val = piece_values.get(move.pieceMoved[1], 0)
+
+    # 1. King proximity: reward moving closer to the enemy king.
+    enemy_king_loc = (
+        gs_original.blackKingLocation
+        if gs_original.WhiteToMove
+        else gs_original.whiteKingLocation
+    )
+    dist = max(
+        abs(move.endRow - enemy_king_loc[0]),
+        abs(move.endCol - enemy_king_loc[1]),
+    )
+    score += max(0, 7 - dist)
+
+    # 2. Enemy-territory invasion.
+    if gs_original.WhiteToMove:
+        if move.endRow <= 3:
+            score += 3
+    else:
+        if move.endRow >= 4:
+            score += 3
+
+    # Simulate the candidate move.
+    gs = copy.deepcopy(gs_original)
+    gs.MakeMove(move)
+
+    # Analyze whether the moved piece can be attacked by the opponent.
+    opponent_moves = gs.getAllPossibleMoves()
+    is_attacked_by_any = False
+    min_attacker_val = 999
+
+    for m in opponent_moves:
+        if m.endRow == move.endRow and m.endCol == move.endCol:
+            is_attacked_by_any = True
+            opp_val = piece_values.get(m.pieceMoved[1], 0)
+            if opp_val < min_attacker_val:
+                min_attacker_val = opp_val
+
+    is_attacked_by_lower = is_attacked_by_any and (min_attacker_val < our_val)
+
+    # 3. Capture bonus, only if not refuted by lower-value recapture.
+    if move.pieceCaptured != "--":
+        if not is_attacked_by_lower:
+            score += 4
+
+    # 4. Safety test: determine whether the moved piece is defended.
+    original_piece = gs.board[move.endRow][move.endCol]
+    enemy_color = "b" if original_piece[0] == "w" else "w"
+    gs.board[move.endRow][move.endCol] = enemy_color + "p"
+    gs.WhiteToMove = not gs.WhiteToMove
+    our_moves = gs.getAllPossibleMoves()
+    is_defended = any(
+        m.endRow == move.endRow and m.endCol == move.endCol
+        for m in our_moves
+    )
+    gs.WhiteToMove = not gs.WhiteToMove
+    gs.board[move.endRow][move.endCol] = original_piece
+
+    is_safe = False
+    if is_defended:
+        if not is_attacked_by_lower:
+            is_safe = True
+    else:
+        if not is_attacked_by_any:
+            is_safe = True
+
+    # 5. Check bonus, only if the checking piece is safe.
+    if gs.inCheck():
+        if is_safe:
+            score += 6
+
+    # 6. Safe threat bonus: moved piece attacks an enemy non-king piece.
+    attacks_enemy = False
+    gs.WhiteToMove = not gs.WhiteToMove
+    our_moves_from_sq = gs.getAllPossibleMoves()
+    gs.WhiteToMove = not gs.WhiteToMove
+
+    for m in our_moves_from_sq:
+        if (
+            m.startRow == move.endRow
+            and m.startCol == move.endCol
+            and m.pieceCaptured != "--"
+        ):
+            if m.pieceCaptured[1] != "K":
+                attacks_enemy = True
+                break
+
+    if attacks_enemy and is_safe:
+        score += 5
+
+    return score
+\end{lstlisting}
+
+\subsection{Defensive Metric Reference}
+
+The reference implementation below gives the complete defensive-score calculation.
+
+\begin{lstlisting}[language=Python]
+import copy
+
+def calculate_defensive_score(gs_original, move):
+    if not move:
+        return 0
+
+    score = 0
+
+    # 1. Simulate the candidate move.
+    gs = copy.deepcopy(gs_original)
+    gs.MakeMove(move)
+
+    # Identify the side that just moved.
+    our_color = "b" if gs_original.WhiteToMove else "w"
+    our_king_loc = (
+        gs.blackKingLocation
+        if our_color == "b"
+        else gs.whiteKingLocation
+    )
+
+    # 2. King-zone defenders and pawn shield.
+    defenders_near_king = 0
+    for r in range(max(0, our_king_loc[0] - 2), min(8, our_king_loc[0] + 3)):
+        for c in range(max(0, our_king_loc[1] - 2), min(8, our_king_loc[1] + 3)):
+            piece = gs.board[r][c]
+            if piece != "--" and piece[0] == our_color and piece[1] != "K":
+                defenders_near_king += 1
+
+                # Bonus for pawns directly shielding the king.
+                if piece[1] == "p" and abs(r - our_king_loc[0]) == 1:
+                    score += 3
+
+    score += defenders_near_king * 2
+
+    # 3. Hanging-piece penalty.
+    # Temporarily switch perspective to generate our own defended squares.
+    gs.WhiteToMove = not gs.WhiteToMove
+    our_moves = gs.getAllPossibleMoves()
+    gs.WhiteToMove = not gs.WhiteToMove
+
+    defended_squares = set((m.endRow, m.endCol) for m in our_moves)
+
+    hanging_pieces = 0
+    for r in range(8):
+        for c in range(8):
+            piece = gs.board[r][c]
+            if piece != "--" and piece[0] == our_color and piece[1] != "K":
+                if (r, c) not in defended_squares:
+                    hanging_pieces += 1
+
+    score -= hanging_pieces * 4
+
+    # 4. Compact placement / safe retreat bonus.
+    distance_from_base = move.endRow if our_color == "w" else (7 - move.endRow)
+    if distance_from_base >= 4:
+        score += 2
+
+    # 5. Rescue bonus: move an attacked piece to a safe square.
+    gs_copy = copy.deepcopy(gs_original)
+    opponent_moves_before = gs_copy.getAllPossibleMoves()
+    was_attacked = any(
+        m.endRow == move.startRow and m.endCol == move.startCol
+        for m in opponent_moves_before
+    )
+
+    if was_attacked:
+        opponent_moves_after = gs.getAllPossibleMoves()
+        is_attacked_now = any(
+            m.endRow == move.endRow and m.endCol == move.endCol
+            for m in opponent_moves_after
+        )
+        if not is_attacked_now:
+            score += 5
+
+    return score
+\end{lstlisting}
+
+\end{document}
