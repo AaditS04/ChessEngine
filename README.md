@@ -205,6 +205,3 @@ This repository is a research prototype. The paper explicitly discusses these li
 - Improve the defensive metric using king-safety deltas, opponent checking moves, simplification incentives, and risk under best replies.
 - Compare prompt-only persona control with activation or inference-time steering methods.
 
-## License
-
-No license has been specified yet. Add a license before public release if you want others to reuse the code.
