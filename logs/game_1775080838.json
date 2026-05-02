@@ -1,0 +1,55 @@
+{
+    "game_id": 1775080838,
+    "moves": [
+        {
+            "timestamp": 1775080953.5586822,
+            "agent": "Calculated Attacker",
+            "raw_response": "I see Black's knight on d5 anchoring their center and directly challenging my e4 pawn. Rather than passively defending, I will strike immediately with **exd5**. This calculated capture eliminates a key central defender, forcibly opens the e-file for my rook and queen, and disrupts Black's piece coordination. It seizes the initiative, clears the center for rapid development with tempo (like Nc3 or d4), and maintains a solid king position while forcing Black to react. It\u2019s an aggressive, principled strike that maximizes activity without compromising safety. <MOVE>exd5</MOVE>",
+            "parsed_move": "e4d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.0,
+            "ai_score": -2,
+            "best_score": -2,
+            "best_move": "f1b5",
+            "score_diff": 0,
+            "move_quality": "Best/Good"
+        },
+        {
+            "timestamp": 1775081023.5741367,
+            "agent": "Calculated Attacker",
+            "raw_response": "Black's premature ...g5 has fatally weakened the kingside, leaving the f7 square critically exposed. My Queen on f3 and Bishop on c4 are already perfectly coordinated to exploit this structural flaw. I see a forced, game-ending tactical shot that requires no further calculation. I will strike immediately with precision, delivering checkmate and seizing the ultimate initiative. <MOVE>Qxf7#</MOVE>",
+            "parsed_move": "Black's premature ...g5 has fatally weakened the kingside, leaving the f7 square critically exposed. My Queen on f3 and Bishop on c4 are already perfectly coordinated to exploit this structural flaw. I see a forced, game-ending tactical shot that requires no further calculation. I will strike immediately with precision, delivering checkmate and seizing the ultimate initiative. <MOVE>Qxf7#</MOVE>",
+            "is_legal": false,
+            "current_illegal_rate": 0.5,
+            "ai_score": null,
+            "best_score": null,
+            "best_move": null,
+            "score_diff": null,
+            "move_quality": "N/A"
+        },
+        {
+            "timestamp": 1775081027.3045585,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "f3f7",
+            "is_legal": true,
+            "current_illegal_rate": 0.5,
+            "ai_score": 9999,
+            "best_score": 9999,
+            "best_move": "f3f7",
+            "score_diff": 0,
+            "move_quality": "Best/Good"
+        }
+    ],
+    "stats": {
+        "total_ai_requests": 2,
+        "illegal_moves": 1,
+        "legal_moves": 1,
+        "illegal_move_rate": 0.5,
+        "total_good_moves": 2,
+        "total_mistakes": 0,
+        "total_blunders": 0
+    },
+    "agent /model": "Calculated Attacker",
+    "prompt / persona": "You are an aggressive but precise chess player known as the Calculated Attacker.\nCRITICAL INSTRUCTIONS:\n1. Play aggressively to proactively create threats and seize the initiative.\n2. Always look for tactical combinations, active piece placement, and King attacks.\n3. NEVER BLUNDER. You are aggressive, but not reckless. Never sacrifice material without a clear, calculated continuation.\n4. Ensure your King is relatively safe before launching an all-out assault.\n5. If no direct attack exists, make active moves that improve your piece coordination.\n"
+}

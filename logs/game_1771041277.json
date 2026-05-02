@@ -1,0 +1,507 @@
+{
+    "game_id": 1771041277,
+    "moves": [
+        {
+            "timestamp": 1771041384.3705907,
+            "agent": "Ollama",
+            "raw_response": "d2d4",
+            "parsed_move": "d2d4",
+            "is_legal": true,
+            "current_illegal_rate": 0.0
+        },
+        {
+            "timestamp": 1771041395.349201,
+            "agent": "Ollama",
+            "raw_response": "g7g5",
+            "parsed_move": "g7g5",
+            "is_legal": true,
+            "current_illegal_rate": 0.0
+        },
+        {
+            "timestamp": 1771041407.7136788,
+            "agent": "Ollama",
+            "raw_response": "c4",
+            "parsed_move": "c2c4",
+            "is_legal": true,
+            "current_illegal_rate": 0.0
+        },
+        {
+            "timestamp": 1771041417.7447522,
+            "agent": "Ollama",
+            "raw_response": "d5",
+            "parsed_move": "d7d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.0
+        },
+        {
+            "timestamp": 1771041428.4906988,
+            "agent": "Ollama",
+            "raw_response": "c4",
+            "parsed_move": "c4",
+            "is_legal": false,
+            "current_illegal_rate": 0.2
+        },
+        {
+            "timestamp": 1771041438.1737597,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "c4d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.2
+        },
+        {
+            "timestamp": 1771041447.8046029,
+            "agent": "Ollama",
+            "raw_response": "c6",
+            "parsed_move": "c7c6",
+            "is_legal": true,
+            "current_illegal_rate": 0.1667
+        },
+        {
+            "timestamp": 1771041459.0684307,
+            "agent": "Ollama",
+            "raw_response": "d5d6",
+            "parsed_move": "d5d6",
+            "is_legal": true,
+            "current_illegal_rate": 0.1429
+        },
+        {
+            "timestamp": 1771041470.4761398,
+            "agent": "Ollama",
+            "raw_response": "d6",
+            "parsed_move": "d6",
+            "is_legal": false,
+            "current_illegal_rate": 0.25
+        },
+        {
+            "timestamp": 1771041476.738137,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "e7d6",
+            "is_legal": true,
+            "current_illegal_rate": 0.25
+        },
+        {
+            "timestamp": 1771041487.1636462,
+            "agent": "Ollama",
+            "raw_response": "d4d5",
+            "parsed_move": "d4d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.2222
+        },
+        {
+            "timestamp": 1771041498.6409116,
+            "agent": "Ollama",
+            "raw_response": "d6",
+            "parsed_move": "d6",
+            "is_legal": false,
+            "current_illegal_rate": 0.3
+        },
+        {
+            "timestamp": 1771041504.155711,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "d8a5",
+            "is_legal": true,
+            "current_illegal_rate": 0.3
+        },
+        {
+            "timestamp": 1771041509.452058,
+            "agent": "Ollama",
+            "raw_response": "b1c3",
+            "parsed_move": "b1c3",
+            "is_legal": true,
+            "current_illegal_rate": 0.2727
+        },
+        {
+            "timestamp": 1771041523.4439461,
+            "agent": "Ollama",
+            "raw_response": "d6",
+            "parsed_move": "d6",
+            "is_legal": false,
+            "current_illegal_rate": 0.3333
+        },
+        {
+            "timestamp": 1771041531.0417254,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "a5c7",
+            "is_legal": true,
+            "current_illegal_rate": 0.3333
+        },
+        {
+            "timestamp": 1771041542.6437197,
+            "agent": "Ollama",
+            "raw_response": "c3",
+            "parsed_move": "c3",
+            "is_legal": false,
+            "current_illegal_rate": 0.3846
+        },
+        {
+            "timestamp": 1771041553.7000082,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "c1g5",
+            "is_legal": true,
+            "current_illegal_rate": 0.3846
+        },
+        {
+            "timestamp": 1771041563.8128066,
+            "agent": "Ollama",
+            "raw_response": "c6d5",
+            "parsed_move": "c6d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.3571
+        },
+        {
+            "timestamp": 1771041577.8322008,
+            "agent": "Ollama",
+            "raw_response": "g5h4",
+            "parsed_move": "g5h4",
+            "is_legal": true,
+            "current_illegal_rate": 0.3333
+        },
+        {
+            "timestamp": 1771041589.9533033,
+            "agent": "Ollama",
+            "raw_response": "c6",
+            "parsed_move": "c6",
+            "is_legal": false,
+            "current_illegal_rate": 0.375
+        },
+        {
+            "timestamp": 1771041602.1924212,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "c7c6",
+            "is_legal": true,
+            "current_illegal_rate": 0.375
+        },
+        {
+            "timestamp": 1771041614.1816509,
+            "agent": "Ollama",
+            "raw_response": "dxc3",
+            "parsed_move": "dxc3",
+            "is_legal": false,
+            "current_illegal_rate": 0.4118
+        },
+        {
+            "timestamp": 1771041624.9063485,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "d1d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.4118
+        },
+        {
+            "timestamp": 1771041634.5610347,
+            "agent": "Ollama",
+            "raw_response": "c6d5",
+            "parsed_move": "c6d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.3889
+        },
+        {
+            "timestamp": 1771041644.2982106,
+            "agent": "Ollama",
+            "raw_response": "d5",
+            "parsed_move": "d5",
+            "is_legal": false,
+            "current_illegal_rate": 0.4211
+        },
+        {
+            "timestamp": 1771041658.090923,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "c3d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.4211
+        },
+        {
+            "timestamp": 1771041665.8612137,
+            "agent": "Ollama",
+            "raw_response": "c8e6",
+            "parsed_move": "c8e6",
+            "is_legal": true,
+            "current_illegal_rate": 0.4
+        },
+        {
+            "timestamp": 1771041676.038274,
+            "agent": "Ollama",
+            "raw_response": "d5c3",
+            "parsed_move": "d5c3",
+            "is_legal": true,
+            "current_illegal_rate": 0.381
+        },
+        {
+            "timestamp": 1771041685.2038755,
+            "agent": "Ollama",
+            "raw_response": "e6f5",
+            "parsed_move": "e6f5",
+            "is_legal": true,
+            "current_illegal_rate": 0.3636
+        },
+        {
+            "timestamp": 1771041695.2250547,
+            "agent": "Ollama",
+            "raw_response": "g1f3",
+            "parsed_move": "g1f3",
+            "is_legal": true,
+            "current_illegal_rate": 0.3478
+        },
+        {
+            "timestamp": 1771041704.6690102,
+            "agent": "Ollama",
+            "raw_response": "f5g4",
+            "parsed_move": "f5g4",
+            "is_legal": true,
+            "current_illegal_rate": 0.3333
+        },
+        {
+            "timestamp": 1771041714.577615,
+            "agent": "Ollama",
+            "raw_response": "f3e5",
+            "parsed_move": "f3e5",
+            "is_legal": true,
+            "current_illegal_rate": 0.32
+        },
+        {
+            "timestamp": 1771041724.1949978,
+            "agent": "Ollama",
+            "raw_response": "g4f3",
+            "parsed_move": "g4f3",
+            "is_legal": true,
+            "current_illegal_rate": 0.3077
+        },
+        {
+            "timestamp": 1771041735.6962898,
+            "agent": "Ollama",
+            "raw_response": "c3",
+            "parsed_move": "c3",
+            "is_legal": false,
+            "current_illegal_rate": 0.3333
+        },
+        {
+            "timestamp": 1771041746.676715,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "e5f3",
+            "is_legal": true,
+            "current_illegal_rate": 0.3333
+        },
+        {
+            "timestamp": 1771041753.9968922,
+            "agent": "Ollama",
+            "raw_response": "d6d5",
+            "parsed_move": "d6d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.3214
+        },
+        {
+            "timestamp": 1771041763.8003652,
+            "agent": "Ollama",
+            "raw_response": "f3e5",
+            "parsed_move": "f3e5",
+            "is_legal": true,
+            "current_illegal_rate": 0.3103
+        },
+        {
+            "timestamp": 1771041771.625548,
+            "agent": "Ollama",
+            "raw_response": "f8h6",
+            "parsed_move": "f8h6",
+            "is_legal": true,
+            "current_illegal_rate": 0.3
+        },
+        {
+            "timestamp": 1771041782.529482,
+            "agent": "Ollama",
+            "raw_response": "c3",
+            "parsed_move": "c3",
+            "is_legal": false,
+            "current_illegal_rate": 0.3226
+        },
+        {
+            "timestamp": 1771041786.5257044,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "c3d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.3226
+        },
+        {
+            "timestamp": 1771041795.556733,
+            "agent": "Ollama",
+            "raw_response": "h6g5",
+            "parsed_move": "h6g5",
+            "is_legal": true,
+            "current_illegal_rate": 0.3125
+        },
+        {
+            "timestamp": 1771041806.7501903,
+            "agent": "Ollama",
+            "raw_response": "d5c3",
+            "parsed_move": "d5c3",
+            "is_legal": true,
+            "current_illegal_rate": 0.303
+        },
+        {
+            "timestamp": 1771041816.895719,
+            "agent": "Ollama",
+            "raw_response": "g5h4",
+            "parsed_move": "g5h4",
+            "is_legal": true,
+            "current_illegal_rate": 0.2941
+        },
+        {
+            "timestamp": 1771041827.1793623,
+            "agent": "Ollama",
+            "raw_response": "c3",
+            "parsed_move": "c3",
+            "is_legal": false,
+            "current_illegal_rate": 0.3143
+        },
+        {
+            "timestamp": 1771041833.532124,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "c3a4",
+            "is_legal": true,
+            "current_illegal_rate": 0.3143
+        },
+        {
+            "timestamp": 1771041842.5424106,
+            "agent": "Ollama",
+            "raw_response": "g8f6",
+            "parsed_move": "g8f6",
+            "is_legal": true,
+            "current_illegal_rate": 0.3056
+        },
+        {
+            "timestamp": 1771041852.8712416,
+            "agent": "Ollama",
+            "raw_response": "d3",
+            "parsed_move": "d3",
+            "is_legal": false,
+            "current_illegal_rate": 0.3243
+        },
+        {
+            "timestamp": 1771041855.9086425,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "e5f3",
+            "is_legal": true,
+            "current_illegal_rate": 0.3243
+        },
+        {
+            "timestamp": 1771041864.749879,
+            "agent": "Ollama",
+            "raw_response": "e6",
+            "parsed_move": "e6",
+            "is_legal": false,
+            "current_illegal_rate": 0.3421
+        },
+        {
+            "timestamp": 1771041868.8264947,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "h4f2",
+            "is_legal": true,
+            "current_illegal_rate": 0.3421
+        },
+        {
+            "timestamp": 1771041873.3938148,
+            "agent": "Ollama",
+            "raw_response": "e1f2",
+            "parsed_move": "e1f2",
+            "is_legal": true,
+            "current_illegal_rate": 0.3333
+        },
+        {
+            "timestamp": 1771041881.8169043,
+            "agent": "Ollama",
+            "raw_response": "f6g4",
+            "parsed_move": "f6g4",
+            "is_legal": true,
+            "current_illegal_rate": 0.325
+        },
+        {
+            "timestamp": 1771041886.76309,
+            "agent": "Ollama",
+            "raw_response": "f2g3",
+            "parsed_move": "f2g3",
+            "is_legal": true,
+            "current_illegal_rate": 0.3171
+        },
+        {
+            "timestamp": 1771041895.6801338,
+            "agent": "Ollama",
+            "raw_response": "g4f6",
+            "parsed_move": "g4f6",
+            "is_legal": true,
+            "current_illegal_rate": 0.3095
+        },
+        {
+            "timestamp": 1771041907.6798034,
+            "agent": "Ollama",
+            "raw_response": "f3g5",
+            "parsed_move": "f3g5",
+            "is_legal": true,
+            "current_illegal_rate": 0.3023
+        },
+        {
+            "timestamp": 1771041916.5560105,
+            "agent": "Ollama",
+            "raw_response": "f6g4",
+            "parsed_move": "f6g4",
+            "is_legal": true,
+            "current_illegal_rate": 0.2955
+        },
+        {
+            "timestamp": 1771041927.0055287,
+            "agent": "Ollama",
+            "raw_response": "g5f3",
+            "parsed_move": "g5f3",
+            "is_legal": true,
+            "current_illegal_rate": 0.2889
+        },
+        {
+            "timestamp": 1771041936.2978396,
+            "agent": "Ollama",
+            "raw_response": "g4f6",
+            "parsed_move": "g4f6",
+            "is_legal": true,
+            "current_illegal_rate": 0.2826
+        },
+        {
+            "timestamp": 1771041946.8234837,
+            "agent": "Ollama",
+            "raw_response": "f3g5",
+            "parsed_move": "f3g5",
+            "is_legal": true,
+            "current_illegal_rate": 0.2766
+        },
+        {
+            "timestamp": 1771041955.9029734,
+            "agent": "Ollama",
+            "raw_response": "f6g4",
+            "parsed_move": "f6g4",
+            "is_legal": true,
+            "current_illegal_rate": 0.2708
+        },
+        {
+            "timestamp": 1771041966.1366465,
+            "agent": "Ollama",
+            "raw_response": "g5f3",
+            "parsed_move": "g5f3",
+            "is_legal": true,
+            "current_illegal_rate": 0.2653
+        }
+    ],
+    "stats": {
+        "total_ai_requests": 49,
+        "illegal_moves": 13,
+        "legal_moves": 36,
+        "illegal_move_rate": 0.2653
+    }
+}

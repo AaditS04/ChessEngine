@@ -1,0 +1,29 @@
+{
+    "game_id": 1772155519,
+    "moves": [
+        {
+            "timestamp": 1772155524.267598,
+            "agent": "Human",
+            "raw_response": "Manual",
+            "parsed_move": "e2e4",
+            "is_legal": true,
+            "current_illegal_rate": 0.0,
+            "ai_score": null,
+            "best_score": null,
+            "best_move": null,
+            "score_diff": null,
+            "move_quality": "N/A"
+        }
+    ],
+    "stats": {
+        "total_ai_requests": 0,
+        "illegal_moves": 0,
+        "legal_moves": 0,
+        "illegal_move_rate": 0.0,
+        "total_good_moves": 0,
+        "total_mistakes": 0,
+        "total_blunders": 0
+    },
+    "agent /model": null,
+    "prompt / persona": null
+}

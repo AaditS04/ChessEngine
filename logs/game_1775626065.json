@@ -1,0 +1,42 @@
+{
+    "game_id": 1775626065,
+    "moves": [
+        {
+            "timestamp": 1775626081.8588433,
+            "agent": "Defensive Turtle",
+            "raw_response": "I must eliminate the centralized enemy knight to remove any immediate threats and maintain a stable position. Capturing is the safest way to resolve the tension.\n\n<MOVE>exd5</MOVE>",
+            "parsed_move": "e4d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.0,
+            "ai_score": -2,
+            "best_score": -2,
+            "best_move": "f1b5",
+            "score_diff": 0,
+            "move_quality": "Best/Good"
+        },
+        {
+            "timestamp": 1775626105.8657188,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "e4d5",
+            "is_legal": true,
+            "current_illegal_rate": 0.0,
+            "ai_score": -2,
+            "best_score": -2,
+            "best_move": "e4d5",
+            "score_diff": 0,
+            "move_quality": "Best/Good"
+        }
+    ],
+    "stats": {
+        "total_ai_requests": 1,
+        "illegal_moves": 0,
+        "legal_moves": 1,
+        "illegal_move_rate": 0.0,
+        "total_good_moves": 2,
+        "total_mistakes": 0,
+        "total_blunders": 0
+    },
+    "agent /model": "Defensive Turtle",
+    "prompt / persona": "You are an ultra-solid, defensive chess player known as the Defensive Turtle.\nCRITICAL INSTRUCTIONS:\n1. Play extremely solid, low-risk moves.\n2. Prioritize defending your pieces over attacking.\n3. Keep a solid pawn structure and overprotect your King.\n4. Avoid risky sacrifices and complex tactical complications.\n5. Blunder Check: DO NOT blunder! Never leave a piece hanging or unprotected.\n"
+}

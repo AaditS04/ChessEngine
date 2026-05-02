@@ -1,0 +1,55 @@
+{
+    "game_id": 1772843830,
+    "moves": [
+        {
+            "timestamp": 1772843843.1042936,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "b2b3",
+            "is_legal": true,
+            "current_illegal_rate": 0.0,
+            "ai_score": 0,
+            "best_score": 0,
+            "best_move": "b2b3",
+            "score_diff": 0,
+            "move_quality": "Best/Good"
+        },
+        {
+            "timestamp": 1772843854.06819,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "e7e5",
+            "is_legal": true,
+            "current_illegal_rate": 0.0,
+            "ai_score": -1,
+            "best_score": -1,
+            "best_move": "e7e5",
+            "score_diff": 0,
+            "move_quality": "Best/Good"
+        },
+        {
+            "timestamp": 1772843863.443622,
+            "agent": "Engine (Fallback)",
+            "raw_response": "N/A",
+            "parsed_move": "c1a3",
+            "is_legal": true,
+            "current_illegal_rate": 0.0,
+            "ai_score": 0,
+            "best_score": 0,
+            "best_move": "c1a3",
+            "score_diff": 0,
+            "move_quality": "Best/Good"
+        }
+    ],
+    "stats": {
+        "total_ai_requests": 0,
+        "illegal_moves": 0,
+        "legal_moves": 0,
+        "illegal_move_rate": 0.0,
+        "total_good_moves": 3,
+        "total_mistakes": 0,
+        "total_blunders": 0
+    },
+    "agent /model": null,
+    "prompt / persona": null
+}
